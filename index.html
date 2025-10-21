@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teka-Teki Romantis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .question-container {
+            margin-bottom: 25px;
+        }
+        
+        .question {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #444;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option-btn {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn:hover {
+            background-color: #ff6b6b;
+            color: white;
+            border-color: #ff6b6b;
+            transform: translateY(-2px);
+        }
+        
+        .option-btn.correct {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .option-btn.wrong {
+            background-color: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #ff6b6b;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .result-container {
+            display: none;
+            padding: 20px;
+            background-color: #ffebee;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .result-container h2 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+        
+        .secret-message {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 5px solid #ff6b6b;
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        .restart-btn {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            background-color: #ff5252;
+            transform: translateY(-2px);
+        }
+        
+        .hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff6b6b;
+            transform: rotate(45deg);
+            opacity: 0;
+        }
+        
+        .heart:before, .heart:after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff6b6b;
+            border-radius: 50%;
+        }
+        
+        .heart:before {
+            top: -10px;
+            left: 0;
+        }
+        
+        .heart:after {
+            top: 0;
+            left: -10px;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(45deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teka-Teki Kalo salah gw entod lu</h1>
+        
+        <div class="question-container">
+            <div class="question" id="question">Pertanyaan akan muncul di sini</div>
+            <div class="options" id="options">
+                <!-- Opsi jawaban akan diisi oleh JavaScript -->
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="result-container" id="result">
+            <h2>Selamat! Kamu berhasil menyelesaikan teka-teki!</h2>
+            <p>Sebagai hadiah, ini pesan rahasia untukmu:</p>
+            <div class="secret-message">
+                "Aslinya aku suka sama kamu tapi kamu selalu nyebelin banget selalu nuduh orang tanpa bukti curigaan itu sikap harus di rubah!!!"
+            </div>
+            <button class="restart-btn" id="restart">Main Lagi</button>
+        </div>
+        
+        <div class="hearts" id="hearts"></div>
+    </div>
+
+    <script>
+        // Data pertanyaan dan jawaban
+        const questions = [
+            {
+                question: "Apa yang selalu datang tetapi tidak pernah sampai?",
+                options: ["Besok", "Kemarin", "Hari ini", "Masa depan"],
+                correct: 0
+            },
+            {
+                question: "Aku punya kota tapi tidak ada rumah, punya hutan tapi tidak ada pohon, punya sungai tapi tidak ada air. Apakah aku?",
+                options: ["Peta", "Imajinasi", "Mimpi", "Lukisan"],
+                correct: 0
+            },
+            {
+                question: "Apa yang bisa dipatahkan meski tidak pernah dipegang?",
+                options: ["Janji", "Hati", "Rekor", "Gelas"],
+                correct: 2
+            },
+            {
+                question: "Semakin banyak kamu mengambil, semakin banyak kamu tinggalkan. Apa itu?",
+                options: ["Langkah", "Uang", "Kenangan", "Foto"],
+                correct: 0
+            },
+            {
+                question: "Aku punya kepala dan ekor, tapi tidak punya tubuh. Apakah aku?",
+                options: ["Koin", "Ular", "Cacing", "Manusia"],
+                correct: 0
+            }
+        ];
+        
+        let currentQuestion = 0;
+        const totalQuestions = questions.length;
+        
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const progressElement = document.getElementById('progress');
+        const resultElement = document.getElementById('result');
+        const restartButton = document.getElementById('restart');
+        const heartsContainer = document.getElementById('hearts');
+        
+        // Fungsi untuk menampilkan pertanyaan
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            questionElement.textContent = question.question;
+            
+            // Kosongkan opsi sebelumnya
+            optionsElement.innerHTML = '';
+            
+            // Tambahkan opsi jawaban
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-btn');
+                button.addEventListener('click', () => checkAnswer(index));
+                optionsElement.appendChild(button);
+            });
+            
+            // Update progress bar
+            const progressPercentage = (currentQuestion / totalQuestions) * 100;
+            progressElement.style.width = `${progressPercentage}%`;
+        }
+        
+        // Fungsi untuk memeriksa jawaban
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const buttons = optionsElement.querySelectorAll('.option-btn');
+            
+            // Tandai jawaban yang benar dan salah
+            buttons.forEach((button, index) => {
+                if (index === question.correct) {
+                    button.classList.add('correct');
+                } else if (index === selectedIndex && index !== question.correct) {
+                    button.classList.add('wrong');
+                }
+                button.disabled = true;
+            });
+            
+            // Tunggu sebentar sebelum pindah ke pertanyaan berikutnya
+            setTimeout(() => {
+                currentQuestion++;
+                
+                if (currentQuestion < totalQuestions) {
+                    showQuestion();
+                } else {
+                    // Tampilkan hasil akhir
+                    showResult();
+                }
+            }, 1500);
+        }
+        
+        // Fungsi untuk menampilkan hasil akhir
+        function showResult() {
+            document.querySelector('.question-container').style.display = 'none';
+            progressElement.style.display = 'none';
+            resultElement.style.display = 'block';
+            
+            // Buat efek hati jatuh
+            createHearts();
+        }
+        
+        // Fungsi untuk membuat efek hati jatuh
+        function createHearts() {
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.classList.add('heart');
+                    
+                    // Posisi acak
+                    const left = Math.random() * 100;
+                    heart.style.left = `${left}%`;
+                    
+                    // Animasi
+                    heart.style.animation = `float ${2 + Math.random() * 3}s linear forwards`;
+                    
+                    heartsContainer.appendChild(heart);
+                    
+                    // Hapus hati setelah animasi selesai
+                    setTimeout(() => {
+                        heart.remove();
+                    }, 5000);
+                }, i * 300);
+            }
+        }
+        
+        // Fungsi untuk memulai ulang permainan
+        function restartGame() {
+            currentQuestion = 0;
+            document.querySelector('.question-container').style.display = 'block';
+            progressElement.style.display = 'block';
+            resultElement.style.display = 'none';
+            progressElement.style.width = '0%';
+            showQuestion();
+        }
+        
+        // Event listener untuk tombol restart
+        restartButton.addEventListener('click', restartGame);
+        
+        // Mulai permainan
+        showQuestion();
+    </script>
+</body>
+</html>
